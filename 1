@@ -1,0 +1,210 @@
+Infoware Assignment ( backend API: use MySQL as database)
+
+CRUD features in Java spring boot API / Node JS API / NestJS API -typescript  :
+Create Employee with multiple contact details (Relationship mapping)
+List Employee (with pagination)
+Update Employee
+Delete Employee
+Get Employee
+
+
+const express = require('express');
+const mongoose = require('mongoose');
+
+const mongoDBConnectionString = 'mongodb://localhost:27017/employee-db';
+mongoose.connect(mongoDBConnectionString, { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+  console.log('Connected to the MongoDB database');
+});
+
+const employeeSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  phoneNumbers: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
+});
+
+const Employee = mongoose.model('Employee', employeeSchema);
+
+const app = express();
+
+const port = 3000;
+
+app.post('/employees', async (req, res) => {
+  try {
+    const { name, email, phoneNumbers } = req.body;
+    
+    const employee = new Employee({
+      name,
+      email,
+      phoneNumbers,
+    });
+    
+    await employee.save();
+   
+    res.status(201).json({
+      success: true,
+      data: employee,
+    });
+  } catch (error) {
+    
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+
+
+
+
+
+List Employee (with pagination)
+
+
+
+
+app.get('/employees', async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    
+    const employees = await Employee.find()
+      .skip((page - 1) * limit)
+      .limit(limit);
+    
+    const totalEmployees = await Employee.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      data: employees,
+      totalEmployees,
+    });
+  } catch (error) {
+    
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+
+
+Update Employee
+
+
+app.put('/employees/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone } = req.body;
+    
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      
+      return res.status(404).json({
+        success: false,
+        error: 'Employee not found',
+      });
+    }
+    
+    employee.name = name;
+    employee.email = email;
+    employee.phone = phone;
+    
+    await employee.save();
+    
+    res.status(200).json({
+      success: true,
+      data: employee,
+    });
+  } catch (error) {
+    
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+
+
+Delete Employee
+
+
+
+app.delete('/employees/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      
+      return res.status(404).json({
+        success: false,
+        error: 'Employee not found',
+      });
+    }
+    
+    await employee.delete();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Employee deleted successfully',
+    });
+  } catch (error) {
+    
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+
+
+
+
+GET EMPLOYEE
+
+
+
+
+app.get('/employees/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      
+      return res.status(404).json({
+        success: false,
+        error: 'Employee not found',
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: employee,
+    });
+  } catch (error) {
+    
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
